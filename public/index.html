@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Project360 – Horeca Store</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;}
+body{background:#f0f4f8;color:#1e293b;font-size:13px;}
+a{text-decoration:none;}
+/* LOGIN */
+#loginPage{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#f0f4f8,#e2e8f0);}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:360px;box-shadow:0 8px 40px rgba(0,0,0,.12);text-align:center;}
+.login-logo{height:56px;margin-bottom:24px;object-fit:contain;}
+.login-title{font-size:22px;font-weight:800;color:#0f172a;margin-bottom:6px;}
+.login-sub{font-size:13px;color:#94a3b8;margin-bottom:28px;}
+.login-input{border:1px solid #e2e8f0;border-radius:9px;padding:12px 16px;font-size:14px;width:100%;margin-bottom:12px;color:#1e293b;}
+.login-input:focus{outline:none;border-color:#C41E3A;box-shadow:0 0 0 3px rgba(196,30,58,.1);}
+.login-btn{background:#C41E3A;color:#fff;border:none;border-radius:9px;padding:13px;width:100%;font-size:14px;font-weight:700;cursor:pointer;}
+.login-btn:hover{background:#a31731;}
+.login-err{color:#dc2626;font-size:12px;margin-top:8px;}
+/* APP SHELL */
+#app{display:none;}
+.header{background:#fff;border-bottom:2px solid #e2e8f0;padding:0 20px;height:58px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 6px rgba(0,0,0,.06);position:sticky;top:0;z-index:50;}
+.logo{height:44px;object-fit:contain;}
+.role-tabs{display:flex;background:#f1f5f9;border-radius:9px;padding:3px;gap:3px;}
+.rtab{padding:6px 14px;border:none;background:transparent;color:#64748b;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;transition:all .18s;}
+.rtab.active{background:#C41E3A;color:#fff;}
+.logout-btn{border:1px solid #e2e8f0;background:#f8fafc;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;}
+.layout{display:flex;height:calc(100vh - 58px);}
+/* SIDEBAR */
+.sidebar{width:240px;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;}
+.sidebar-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 8px;font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.1em;}
+.proj-card{margin:0 8px 6px;padding:11px 12px;border-radius:9px;background:#f8fafc;cursor:pointer;border-left:3px solid transparent;transition:all .15s;}
+.proj-card:hover{background:#fff7ed;}
+.proj-card.active{background:#fff1f2;border-left-color:#C41E3A;}
+.proj-name{font-weight:700;font-size:13px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.proj-sub{font-size:10px;color:#94a3b8;margin-top:2px;}
+.pbar{height:4px;border-radius:2px;background:#e2e8f0;margin-top:6px;overflow:hidden;}
+.pfill{height:100%;border-radius:2px;transition:width .5s;}
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:22px;}
+.page-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;}
+.page-title{font-size:20px;font-weight:800;color:#0f172a;}
+.page-sub{font-size:11px;color:#94a3b8;margin-top:3px;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.kpi{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;}
+.kpi-lbl{font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.08em;margin-bottom:5px;}
+.kpi-val{font-size:20px;font-weight:800;}
+.kpi-sub{font-size:10px;color:#94a3b8;margin-top:3px;}
+/* TABLE CARD */
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:13px;overflow:hidden;margin-bottom:18px;}
+.card-hd{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f1f5f9;font-weight:700;font-size:13px;}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{background:#f8fafc;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:#64748b;letter-spacing:.07em;border-bottom:1px solid #f1f5f9;white-space:nowrap;}
+td{padding:11px 12px;border-bottom:1px solid #f8fafc;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:#fef9f0;}
+/* PILLS & BUTTONS */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.btn{border:none;border-radius:7px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:700;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+.btn:hover{opacity:.88;}
+.btn-red{background:#C41E3A;color:#fff;}
+.btn-green{background:#2d6a2d;color:#fff;}
+.btn-blue{background:#2563eb;color:#fff;}
+.btn-orange{background:#d97706;color:#fff;}
+.btn-gray{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;}
+.btn-sm{padding:4px 9px;font-size:11px;}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:#fff;border-radius:14px;max-width:580px;width:100%;max-height:90vh;overflow-y:auto;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.modal-title{font-size:17px;font-weight:800;color:#0f172a;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-full{grid-column:1/-1;}
+label{font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;display:block;margin-bottom:4px;}
+input,select,textarea{border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:13px;width:100%;color:#1e293b;background:#fff;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#C41E3A;box-shadow:0 0 0 3px rgba(196,30,58,.1);}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
+/* SHARE STEPS */
+.share-step{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;}
+.step-num{width:26px;height:26px;border-radius:50%;background:#C41E3A;color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.copy-link-box{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;font-size:12px;font-family:monospace;color:#1e293b;word-break:break-all;margin:8px 0;}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#0f172a;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;animation:slideUp .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.3);}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+/* RESPONSIVE */
+@media(max-width:768px){.kpis{grid-template-columns:1fr 1fr;}.form-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage">
+  <div class="login-box">
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px">
+      <img src="/logo.jpg" alt="Horeca Store" style="height:50px;object-fit:contain" onerror="this.style.display='none'"/>
+      <div style="background:#111827;border-radius:9px;padding:5px 12px;text-align:center;line-height:1.1">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.08em;color:#94a3b8">PROJECT</div>
+        <div style="font-size:20px;font-weight:900;color:#C41E3A;letter-spacing:.06em">360</div>
+      </div>
+    </div>
+    <div class="login-title">HorecaStore Project360</div>
+    <div class="login-sub">Live tracking · Supplier status · Full transparency</div>
+    <input class="login-input" id="pwInput" type="password" placeholder="Enter your password" onkeydown="if(event.key==='Enter')login()"/>
+    <button class="login-btn" onclick="login()">Sign In →</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <img id="headerLogo" class="logo" src="/logo.jpg" alt="Horeca Store" onerror="this.style.display='none'"/>
+      <div style="background:#111827;border-radius:8px;padding:4px 10px;text-align:center;line-height:1.15;cursor:default" title="HorecaStore Project360">
+        <div style="font-size:9px;font-weight:800;letter-spacing:.1em;color:#6b7280">PROJECT</div>
+        <div style="font-size:15px;font-weight:900;color:#C41E3A;letter-spacing:.04em;margin-top:-1px">360</div>
+      </div>
+    </div>
+    <div class="role-tabs" id="roleTabs" style="display:none">
+      <button class="rtab active" onclick="setView('admin',this)">🏪 Admin</button>
+      <button class="rtab" onclick="setView('team',this)">👷 Team</button>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign Out</button>
+  </div>
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-hd">
+        PROJECTS
+        <button class="btn btn-red btn-sm" id="newProjBtn" style="display:none" onclick="openAddProj()">+ New</button>
+      </div>
+      <div id="projList"></div>
+    </div>
+    <div class="main" id="mainArea">
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:14px;">
+        Loading...
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+const SC = {
+  'Pending Order':    {color:'#92400e',bg:'#fef3c7',icon:'⏳',step:0},
+  'Order Placed':     {color:'#854d0e',bg:'#fde68a',icon:'📋',step:1},
+  'Advance Paid':     {color:'#5b21b6',bg:'#ede9fe',icon:'💳',step:2},
+  'Processing':       {color:'#1e40af',bg:'#dbeafe',icon:'⚙️',step:3},
+  'Shipped':          {color:'#c2410c',bg:'#ffedd5',icon:'🚚',step:4},
+  'BOL Received':     {color:'#065f46',bg:'#d1fae5',icon:'📄',step:5},
+  'Out for Delivery': {color:'#9d174d',bg:'#fce7f3',icon:'📦',step:6},
+  'Delivered':        {color:'#14532d',bg:'#dcfce7',icon:'✅',step:7}
+};
+const STATUSES = Object.keys(SC);
+const CUISINES = ['American','Mexican','Italian','Asian/Chinese','Mediterranean','Indian','Catering/Banquet','Bakery','BBQ','Seafood','Fast Food/QSR','Hotel Kitchen','Ghost Kitchen','Other'];
+const PROJ_TYPES = ['New Restaurant Build-Out','Kitchen Renovation','Equipment Replacement','Catering Setup','Hotel F&B','Ghost Kitchen Setup','Expansion','Other'];
+const SUPPLIERS = ['Atosa Direct','True Refrigeration','Webstore (NJ)','Hobart Service','CaptiveAire','Vulcan Direct','Kolpak','Norpro','Advance Tabco','Other'];
+const ADV_TYPES = ['None','50% (Half)','100% (Full)','Custom'];
+const EMOJI_MAP = {oven:'🔥',refrigerator:'❄️',cooler:'❄️',freezer:'🧊',table:'🔩',dishwasher:'🫧',hood:'💨',prep:'🥗',grill:'🍖',fryer:'🍟',tortilla:'🌮',mixer:'🥣','walk-in':'🏪',broiler:'🔥',oven:'🔥'};
+const fmt = n => '$' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0});
+
+let token = localStorage.getItem('hToken');
+let userRole = localStorage.getItem('hRole');
+let currentView = userRole === 'admin' ? 'admin' : 'team';
+let projects = [];
+let selProjId = null;
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+async function login() {
+  const pw = document.getElementById('pwInput').value;
+  const err = document.getElementById('loginErr');
+  err.textContent = '';
+  try {
+    const res = await apiFetch('/api/auth/login', 'POST', { password: pw });
+    token = res.token;
+    userRole = res.role;
+    localStorage.setItem('hToken', token);
+    localStorage.setItem('hRole', userRole);
+    initApp();
+  } catch(e) {
+    err.textContent = '❌ ' + (e.message || 'Invalid password');
+  }
+}
+
+function logout() {
+  localStorage.removeItem('hToken');
+  localStorage.removeItem('hRole');
+  token = null; userRole = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('pwInput').value = '';
+}
+
+async function initApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  currentView = userRole === 'admin' ? 'admin' : 'team';
+  if (userRole === 'admin') {
+    document.getElementById('roleTabs').style.display = 'flex';
+    document.getElementById('newProjBtn').style.display = 'inline-flex';
+    document.querySelectorAll('.rtab').forEach((t,i) => t.classList.toggle('active', i===0));
+  }
+  await loadProjects();
+}
+
+// ── API HELPER ────────────────────────────────────────────────────────────────
+async function apiFetch(url, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ── PROJECTS ──────────────────────────────────────────────────────────────────
+async function loadProjects() {
+  try {
+    projects = await apiFetch('/api/projects');
+    if (projects.length && !selProjId) selProjId = projects[0].id;
+    renderSidebar();
+    renderMain();
+  } catch(e) {
+    if (e.message.includes('token') || e.message.includes('Unauthorized')) logout();
+  }
+}
+
+function renderSidebar() {
+  const list = document.getElementById('projList');
+  list.innerHTML = projects.map(p => {
+    const del = p.items.filter(i=>i.status==='Delivered').length;
+    const pct = p.items.length ? Math.round((del/p.items.length)*100) : 0;
+    return `<div class="proj-card${p.id===selProjId?' active':''}" onclick="selectProj(${p.id})">
+      <div class="proj-name">${esc(p.client)}</div>
+      <div class="proj-sub">${p.items.length} items &middot; ${p.est_delivery||'TBD'}</div>
+      <div class="pbar"><div class="pfill" style="width:${pct}%;background:${pct===100?'#2d6a2d':'#C41E3A'}"></div></div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:3px">${del}/${p.items.length} delivered</div>
+    </div>`;
+  }).join('');
+}
+
+function selectProj(id) {
+  selProjId = id;
+  renderSidebar();
+  renderMain();
+}
+
+function setView(v, el) {
+  currentView = v;
+  document.querySelectorAll('.rtab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderMain();
+}
+
+function getProj() { return projects.find(p=>p.id===selProjId) || projects[0]; }
+
+function renderMain() {
+  const p = getProj();
+  if (!p) { document.getElementById('mainArea').innerHTML = '<div style="padding:40px;color:#94a3b8;text-align:center">No projects yet. Click + New to create one.</div>'; return; }
+
+  const sell = p.items.reduce((s,i)=>s+parseFloat(i.sell_each)*i.qty,0);
+  const cost = p.items.reduce((s,i)=>s+parseFloat(i.cost_each)*i.qty,0);
+  const margin = sell-cost;
+  const mPct = sell?((margin/sell)*100).toFixed(1):0;
+  const balance = sell - parseFloat(p.paid_by_client||0);
+  const del = p.items.filter(i=>i.status==='Delivered').length;
+  const pct = p.items.length ? Math.round((del/p.items.length)*100) : 0;
+  const isAdmin = currentView==='admin';
+
+  const kpiHtml = isAdmin
+    ? `<div class="kpis">
+        ${kpi('Contract',fmt(sell),p.items.length+' items','#C41E3A')}
+        ${kpi('Total Cost',fmt(cost),'All suppliers','#7c3aed')}
+        ${kpi('Gross Margin',fmt(margin),mPct+'%','#2d6a2d')}
+        ${kpi('Balance Due',fmt(balance),fmt(p.paid_by_client)+' paid',balance>0?'#dc2626':'#2d6a2d')}
+       </div>`
+    : `<div class="kpis" style="grid-template-columns:1fr 1fr">
+        ${kpi('Progress',pct+'%',del+'/'+p.items.length+' delivered','#2d6a2d')}
+        ${kpi('Est. Completion',p.est_delivery||'TBD','Started '+(p.start_date||'—'),'#C41E3A')}
+       </div>`;
+
+  const cols = isAdmin
+    ? ['Item','Supplier','Qty','Cost','Sell','Margin','Advance','Status','Location','ETA','BOL / Tracking','']
+    : ['Item','Supplier','Qty','Status','Location','ETA','BOL / Tracking',''];
+
+  const rows = p.items.map(it => {
+    const st = SC[it.status]||SC['Pending Order'];
+    const im = (parseFloat(it.sell_each)-parseFloat(it.cost_each))*it.qty;
+    const ip = parseFloat(it.sell_each)?(((parseFloat(it.sell_each)-parseFloat(it.cost_each))/parseFloat(it.sell_each))*100).toFixed(0):0;
+    const advOk = it.advance_type&&it.advance_type!=='None';
+    return `<tr>
+      <td><div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:18px">${it.img_emoji||'📦'}</span>
+        <div><div style="font-weight:700">${esc(it.name)}</div><div style="font-size:11px;color:#94a3b8">${esc(it.brand||'')}</div></div>
+      </div></td>
+      <td style="color:#475569;font-size:12px">${esc(it.supplier||'')}<br><span style="color:#94a3b8;font-size:10px">${esc(it.origin||'')}</span></td>
+      <td style="font-weight:700">${it.qty}</td>
+      ${isAdmin?`
+        <td style="color:#d4860a;font-weight:600">${fmt(parseFloat(it.cost_each)*it.qty)}</td>
+        <td style="color:#2563eb;font-weight:600">${fmt(parseFloat(it.sell_each)*it.qty)}</td>
+        <td><span style="color:#2d6a2d;font-weight:700">${fmt(im)}</span><span style="font-size:10px;color:#2d6a2d;margin-left:3px">${ip}%</span></td>
+        <td><span class="pill" style="color:${advOk?'#2d6a2d':'#dc2626'};background:${advOk?'#d1fae5':'#fee2e2'};font-size:10px">
+          ${it.advance_type==='100% (Full)'?'✅ Full':it.advance_type==='None'?'⚠️ None':'💳 '+it.advance_type}
+        </span></td>`:''}
+      <td><span class="pill" style="color:${st.color};background:${st.bg}">${st.icon} ${it.status}</span></td>
+      <td style="font-size:11px;color:#64748b;max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(it.location||'—')}</td>
+      <td style="font-size:11px;white-space:nowrap">${it.eta||'—'}</td>
+      <td>${it.bol?`<div style="color:#2d6a2d;font-size:11px;font-weight:700">${esc(it.bol)}</div><div style="color:#94a3b8;font-size:10px">${esc(it.tracking||'')}</div>`:'<span style="color:#cbd5e1">—</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-gray btn-sm" onclick="openEditItem(${it.id})">✏️ Update</button>
+        ${isAdmin?`<button class="btn btn-gray btn-sm" style="margin-left:4px;color:#dc2626" onclick="deleteItem(${it.id})">🗑</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+
+  const portalUrl = `${window.location.origin}/portal/${p.slug}`;
+
+  document.getElementById('mainArea').innerHTML = `
+    <div class="page-hd">
+      <div>
+        <div class="page-title">${esc(p.client)}</div>
+        <div class="page-sub">${esc(p.cuisine_type||'')} &middot; ${esc(p.project_type||'')} &middot; ${esc(p.contact_name||'')} &middot; ${esc(p.contact_email||'')}</div>
+      </div>
+      <div class="actions">
+        ${isAdmin?`<button class="btn btn-green" onclick="openAddItem()">+ Add Item</button>`:''}
+        <button class="btn btn-orange" onclick="openShare()">📤 Share with Client</button>
+        ${isAdmin?`<button class="btn btn-gray btn-sm" onclick="openEditProj()">⚙️ Edit Project</button>`:''}
+      </div>
+    </div>
+    ${kpiHtml}
+    <div class="card">
+      <div class="card-hd">
+        <span>📦 Item Tracker</span>
+        <span style="color:#94a3b8;font-size:12px">${del}/${p.items.length} delivered &middot; ${pct}%</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+          <tbody>${rows||'<tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px">No items yet. Click + Add Item.</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function kpi(label, val, sub, color) {
+  return `<div class="kpi">
+    <div class="kpi-lbl">${label.toUpperCase()}</div>
+    <div class="kpi-val" style="color:${color}">${val}</div>
+    <div class="kpi-sub">${sub}</div>
+  </div>`;
+}
+
+// ── SHARE MODAL ────────────────────────────────────────────────────────────────
+function openShare() {
+  const p = getProj();
+  const portalUrl = `${window.location.origin}/portal/${p.slug}`;
+  const sell = p.items.reduce((s,i)=>s+parseFloat(i.sell_each)*i.qty,0);
+  const balance = sell - parseFloat(p.paid_by_client||0);
+  const del = p.items.filter(i=>i.status==='Delivered').length;
+  const pct = p.items.length?Math.round((del/p.items.length)*100):0;
+  const itemLines = p.items.map(it=>`• ${it.img_emoji} ${it.name} — ${SC[it.status]?.icon||''} ${it.status}`).join('\n');
+  const emailSubject = `Your Project Update – ${p.client} | Horeca Store`;
+  const emailBody = `Dear ${(p.contact_name||'').split(' ')[0]||'Client'},\n\nYour project update is ready. Click the link below to see live status:\n\n${portalUrl}\n\nQuick Summary:\nProgress: ${pct}% (${del}/${p.items.length} items delivered)\nEst. Completion: ${p.est_delivery||'TBD'}\n${balance>0?'Balance Due: '+fmt(balance):'✅ Fully Paid'}\n\n${itemLines}\n\nBest regards,\nHoreca Store Team\ninfo@horecastore.com`;
+  const mailtoLink = `mailto:${p.contact_email||''}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
+  modal(`
+    <div class="modal-hd">
+      <span class="modal-title">📤 Share with ${esc((p.contact_name||'Client').split(' ')[0])}</span>
+      <button class="btn btn-gray btn-sm" onclick="closeModal()">✕</button>
+    </div>
+    <div class="share-step">
+      <div class="step-num">1</div>
+      <div style="flex:1">
+        <div style="font-weight:700;margin-bottom:3px">Client Portal Link</div>
+        <div style="font-size:11px;color:#64748b;margin-bottom:8px">Send this link to your client — they see live status, no login needed</div>
+        <div class="copy-link-box">${portalUrl}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-red" onclick="copyText('${portalUrl}')">📋 Copy Link</button>
+          <button class="btn btn-gray" onclick="window.open('${portalUrl}','_blank')">👁 Preview</button>
+        </div>
+      </div>
+    </div>
+    <div class="share-step">
+      <div class="step-num">2</div>
+      <div style="flex:1">
+        <div style="font-weight:700;margin-bottom:3px">Email Client</div>
+        <div style="font-size:11px;color:#64748b;margin-bottom:8px">Opens your email app with a pre-written message containing the portal link</div>
+        <div style="font-size:12px;margin-bottom:8px"><strong>To:</strong> ${esc(p.contact_name||'')} · <span style="color:#2563eb">${esc(p.contact_email||'')}</span></div>
+        <a href="${mailtoLink}"><button class="btn btn-blue" style="width:100%;padding:10px">📧 Open Email App (Pre-written)</button></a>
+      </div>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 14px;font-size:11px;color:#166534;margin-bottom:12px">
+      ✅ <strong>This is a live link.</strong> Every time your team updates an item status, the client's portal refreshes automatically.
+    </div>
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="background:#111827;border-radius:6px;padding:2px 8px;text-align:center;line-height:1.2">
+          <div style="font-size:7px;font-weight:800;letter-spacing:.1em;color:#6b7280">PROJECT</div>
+          <div style="font-size:12px;font-weight:900;color:#C41E3A;margin-top:-1px">360</div>
+        </div>
+        <span style="font-size:11px;font-weight:700;color:#92400e">Add to your quotation / proposal:</span>
+      </div>
+      <div id="p360tagline" style="background:#fff;border:1px dashed #f97316;border-radius:8px;padding:12px;font-size:12px;color:#1e293b;line-height:1.6;font-style:italic">
+        "Includes access to <strong>HorecaStore Project360</strong> — Live project tracking, supplier status updates, delivery timelines &amp; full financial transparency."
+      </div>
+      <button onclick="copyText('Includes access to HorecaStore Project360 — Live project tracking, supplier status updates, delivery timelines & full financial transparency.')" class="btn btn-gray btn-sm" style="margin-top:8px;width:100%">📋 Copy Tagline for Proposals</button>
+    </div>
+  `);
+}
+
+async function copyText(text) {
+  await navigator.clipboard.writeText(text);
+  toast('✅ Link copied to clipboard!');
+}
+
+// ── ADD PROJECT MODAL ─────────────────────────────────────────────────────────
+function openAddProj() {
+  modal(`
+    <div class="modal-hd"><span class="modal-title">🏗️ New Project</span><button class="btn btn-gray btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="form-grid">
+      <div><label>Client Name *</label><input id="nClient" placeholder="e.g. Agas Catering"/></div>
+      <div><label>Contact Name</label><input id="nContact"/></div>
+      <div><label>Contact Email</label><input id="nEmail" type="email"/></div>
+      <div><label>Amount Paid ($)</label><input id="nPaid" type="number" value="0" min="0"/></div>
+      <div><label>Cuisine Type</label><select id="nCuisine"><option value="">Select...</option>${CUISINES.map(c=>`<option>${c}</option>`).join('')}</select></div>
+      <div><label>Project Type</label><select id="nProjType"><option value="">Select...</option>${PROJ_TYPES.map(c=>`<option>${c}</option>`).join('')}</select></div>
+      <div><label>Start Date</label><input id="nStart" type="date"/></div>
+      <div><label>Est. Delivery</label><input id="nDelivery" type="date"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-red" onclick="saveNewProj()">Create Project</button>
+    </div>`);
+}
+
+async function saveNewProj() {
+  const client = document.getElementById('nClient').value.trim();
+  if (!client) { toast('❌ Client name is required','error'); return; }
+  try {
+    const p = await apiFetch('/api/projects','POST',{
+      client, contact_name:document.getElementById('nContact').value,
+      contact_email:document.getElementById('nEmail').value,
+      paid_by_client:parseFloat(document.getElementById('nPaid').value)||0,
+      cuisine_type:document.getElementById('nCuisine').value,
+      project_type:document.getElementById('nProjType').value,
+      start_date:document.getElementById('nStart').value||null,
+      est_delivery:document.getElementById('nDelivery').value||null
+    });
+    closeModal();
+    projects.unshift(p);
+    selProjId = p.id;
+    renderSidebar();
+    renderMain();
+    toast('✅ Project created');
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+// ── EDIT PROJECT MODAL ────────────────────────────────────────────────────────
+function openEditProj() {
+  const p = getProj();
+  modal(`
+    <div class="modal-hd"><span class="modal-title">⚙️ Edit ${esc(p.client)}</span><button class="btn btn-gray btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="form-grid">
+      <div><label>Contact Name</label><input id="eContact" value="${esc(p.contact_name||'')}"/></div>
+      <div><label>Contact Email</label><input id="eEmail" type="email" value="${esc(p.contact_email||'')}"/></div>
+      <div><label>Amount Paid ($)</label><input id="ePaid" type="number" value="${p.paid_by_client||0}" min="0"/></div>
+      <div><label>Est. Delivery</label><input id="eDelivery" type="date" value="${p.est_delivery||''}"/></div>
+      <div><label>Start Date</label><input id="eStart" type="date" value="${p.start_date||''}"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-red" onclick="saveEditProj()">Save Changes</button>
+    </div>`);
+}
+
+async function saveEditProj() {
+  const p = getProj();
+  try {
+    const updated = await apiFetch(`/api/projects/${p.id}`,'PUT',{
+      contact_name:document.getElementById('eContact').value,
+      contact_email:document.getElementById('eEmail').value,
+      paid_by_client:parseFloat(document.getElementById('ePaid').value)||0,
+      est_delivery:document.getElementById('eDelivery').value||null,
+      start_date:document.getElementById('eStart').value||null
+    });
+    const idx = projects.findIndex(x=>x.id===p.id);
+    projects[idx] = { ...projects[idx], ...updated };
+    closeModal();
+    renderSidebar();
+    renderMain();
+    toast('✅ Project updated');
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+// ── ADD ITEM MODAL ────────────────────────────────────────────────────────────
+function openAddItem() {
+  modal(`
+    <div class="modal-hd"><span class="modal-title">📦 Add Item</span><button class="btn btn-gray btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="form-grid">
+      <div class="form-full"><label>Item Name *</label><input id="iName" placeholder="e.g. Commercial Convection Oven"/></div>
+      <div><label>Brand</label><input id="iBrand" placeholder="e.g. Atosa"/></div>
+      <div><label>Supplier</label><select id="iSupplier">${SUPPLIERS.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div><label>Origin / Warehouse</label><input id="iOrigin" placeholder="e.g. GA, NJ, Custom"/></div>
+      <div><label>Qty</label><input id="iQty" type="number" value="1" min="1"/></div>
+      <div><label>Cost Price Each ($)</label><input id="iCost" type="number" value="0" min="0"/></div>
+      <div><label>Sell Price Each ($)</label><input id="iSell" type="number" value="0" min="0"/></div>
+      <div><label>Advance Payment</label><select id="iAdv">${ADV_TYPES.map(a=>`<option>${a}</option>`).join('')}</select></div>
+      <div><label>Advance Amount ($)</label><input id="iAdvAmt" type="number" value="0" min="0"/></div>
+      <div><label>Status</label><select id="iStatus">${STATUSES.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div><label>ETA</label><input id="iEta" type="date"/></div>
+      <div><label>Current Location</label><input id="iLoc" placeholder="e.g. Atosa factory – scheduled"/></div>
+    </div>
+    <div style="margin-top:12px"><label>Notes</label><textarea id="iNotes" rows="2" placeholder="Any additional notes..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-green" onclick="saveNewItem()">Add Item</button>
+    </div>`);
+}
+
+function guessEmoji(name) {
+  const n = name.toLowerCase();
+  for (const [k,v] of Object.entries(EMOJI_MAP)) { if (n.includes(k)) return v; }
+  return '📦';
+}
+
+async function saveNewItem() {
+  const name = document.getElementById('iName').value.trim();
+  if (!name) { toast('❌ Item name required','error'); return; }
+  const p = getProj();
+  try {
+    const item = await apiFetch(`/api/projects/${p.id}/items`,'POST',{
+      name, brand:document.getElementById('iBrand').value,
+      supplier:document.getElementById('iSupplier').value,
+      origin:document.getElementById('iOrigin').value,
+      qty:parseInt(document.getElementById('iQty').value)||1,
+      cost_each:parseFloat(document.getElementById('iCost').value)||0,
+      sell_each:parseFloat(document.getElementById('iSell').value)||0,
+      advance_type:document.getElementById('iAdv').value,
+      advance_amt:parseFloat(document.getElementById('iAdvAmt').value)||0,
+      status:document.getElementById('iStatus').value,
+      eta:document.getElementById('iEta').value||null,
+      location:document.getElementById('iLoc').value,
+      notes:document.getElementById('iNotes').value,
+      img_emoji:guessEmoji(name)
+    });
+    const idx = projects.findIndex(x=>x.id===p.id);
+    projects[idx].items.push(item);
+    closeModal();
+    renderSidebar();
+    renderMain();
+    toast('✅ Item added');
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+// ── EDIT ITEM MODAL ───────────────────────────────────────────────────────────
+function openEditItem(itemId) {
+  const p = getProj();
+  const it = p.items.find(i=>i.id===itemId);
+  if (!it) return;
+  const isAdmin = currentView==='admin';
+
+  modal(`
+    <div class="modal-hd">
+      <span class="modal-title">${it.img_emoji||'📦'} Update: ${esc(it.name)}</span>
+      <button class="btn btn-gray btn-sm" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div><label>Status</label><select id="eStatus">${STATUSES.map(s=>`<option${s===it.status?' selected':''}>${s}</option>`).join('')}</select></div>
+      <div><label>Current Location</label><input id="eLoc" value="${esc(it.location||'')}"/></div>
+      <div><label>ETA</label><input id="eEta" type="date" value="${it.eta||''}"/></div>
+      <div><label>BOL Number</label><input id="eBol" value="${esc(it.bol||'')}"/></div>
+      <div><label>Tracking Number</label><input id="eTrack" value="${esc(it.tracking||'')}"/></div>
+      ${isAdmin?`<div><label>Advance Type</label><select id="eAdv">${ADV_TYPES.map(a=>`<option${a===it.advance_type?' selected':''}>${a}</option>`).join('')}</select></div>`:''}
+      <div><label>Delivered Date</label><input id="eDelivDate" type="date" value="${it.delivered_date||''}"/></div>
+      <div><label>Received By</label><input id="eRecBy" value="${esc(it.received_by||'')}"/></div>
+      ${isAdmin?`
+        <div><label>Cost Price Each ($)</label><input id="eCost" type="number" value="${it.cost_each||0}"/></div>
+        <div><label>Sell Price Each ($)</label><input id="eSell" type="number" value="${it.sell_each||0}"/></div>`:''
+      }
+    </div>
+    <div style="margin-top:12px"><label>Notes</label><textarea id="eNotes" rows="2">${esc(it.notes||'')}</textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-green" onclick="saveEditItem(${itemId})">Save Update</button>
+    </div>`);
+}
+
+async function saveEditItem(itemId) {
+  const p = getProj();
+  const isAdmin = currentView==='admin';
+  try {
+    const body = {
+      status:document.getElementById('eStatus').value,
+      location:document.getElementById('eLoc').value,
+      bol:document.getElementById('eBol').value||null,
+      tracking:document.getElementById('eTrack').value||null,
+      eta:document.getElementById('eEta').value||null,
+      delivered_date:document.getElementById('eDelivDate').value||null,
+      received_by:document.getElementById('eRecBy').value||null,
+      notes:document.getElementById('eNotes').value
+    };
+    if (isAdmin) {
+      body.advance_type = document.getElementById('eAdv').value;
+      body.cost_each = parseFloat(document.getElementById('eCost').value)||0;
+      body.sell_each = parseFloat(document.getElementById('eSell').value)||0;
+    }
+    const updated = await apiFetch(`/api/items/${itemId}`,'PUT', body);
+    const idx = projects.findIndex(x=>x.id===p.id);
+    const iIdx = projects[idx].items.findIndex(i=>i.id===itemId);
+    projects[idx].items[iIdx] = updated;
+    closeModal();
+    renderSidebar();
+    renderMain();
+    toast('✅ Item updated');
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+async function deleteItem(itemId) {
+  if (!confirm('Delete this item? This cannot be undone.')) return;
+  const p = getProj();
+  try {
+    await apiFetch(`/api/items/${itemId}`,'DELETE');
+    const idx = projects.findIndex(x=>x.id===p.id);
+    projects[idx].items = projects[idx].items.filter(i=>i.id!==itemId);
+    renderSidebar();
+    renderMain();
+    toast('🗑 Item deleted');
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+// ── MODAL HELPER ──────────────────────────────────────────────────────────────
+function modal(html) {
+  document.getElementById('modalContainer')?.remove();
+  const d = document.createElement('div');
+  d.id = 'modalContainer';
+  d.className = 'overlay';
+  d.onclick = e => { if(e.target===d) closeModal(); };
+  d.innerHTML = `<div class="modal">${html}</div>`;
+  document.body.appendChild(d);
+}
+function closeModal() { document.getElementById('modalContainer')?.remove(); }
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.style.background = type==='error'?'#dc2626':'#0f172a';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ── UTIL ──────────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+if (token) {
+  apiFetch('/api/auth/me').then(() => initApp()).catch(logout);
+}
+</script>
+</body>
+</html>

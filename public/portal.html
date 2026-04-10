@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Project360 | Horeca Store</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;}
+body{background:#f0f4f8;color:#1e293b;font-size:13px;}
+.header{background:#fff;border-bottom:2px solid #e2e8f0;padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+.logo{height:42px;object-fit:contain;}
+.secure-badge{font-size:11px;color:#94a3b8;font-weight:600;display:flex;align-items:center;gap:5px;}
+.wrap{max-width:780px;margin:0 auto;padding:28px 16px;}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.btn{border:none;border-radius:8px;padding:9px 20px;cursor:pointer;font-size:13px;font-weight:700;}
+.pay-btn{background:linear-gradient(135deg,#C41E3A,#9b1c1c);color:#fff;padding:11px 24px;border-radius:9px;font-weight:700;cursor:pointer;font-size:14px;border:none;}
+.item-card{background:#fff;border:1px solid #e2e8f0;border-radius:13px;padding:16px;margin-bottom:12px;transition:box-shadow .15s;}
+.item-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.07);}
+.tl{display:flex;align-items:center;margin-top:14px;}
+.tl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.tl-line{flex:1;height:2px;min-width:10px;}
+.ai-badge{background:#7c3aed;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
+.upsell-card{background:#fff;border:1px solid #e9d5ff;border-radius:10px;padding:14px;}
+#loading{text-align:center;padding:60px;color:#94a3b8;font-size:15px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div style="display:flex;align-items:center;gap:10px">
+    <img class="logo" src="/logo.jpg" alt="Horeca Store" onerror="this.style.display='none'"/>
+    <div style="background:#111827;border-radius:8px;padding:4px 10px;text-align:center;line-height:1.15" title="HorecaStore Project360">
+      <div style="font-size:9px;font-weight:800;letter-spacing:.1em;color:#6b7280">PROJECT</div>
+      <div style="font-size:15px;font-weight:900;color:#C41E3A;letter-spacing:.04em;margin-top:-1px">360</div>
+    </div>
+  </div>
+  <div class="secure-badge">🔒 Secure Client Portal</div>
+</div>
+
+<div class="wrap">
+  <div id="loading">Loading your project...</div>
+  <div id="content" style="display:none"></div>
+</div>
+
+<script>
+const SC = {
+  'Pending Order':    {color:'#92400e',bg:'#fef3c7',icon:'⏳',step:0},
+  'Order Placed':     {color:'#854d0e',bg:'#fde68a',icon:'📋',step:1},
+  'Advance Paid':     {color:'#5b21b6',bg:'#ede9fe',icon:'💳',step:2},
+  'Processing':       {color:'#1e40af',bg:'#dbeafe',icon:'⚙️',step:3},
+  'Shipped':          {color:'#c2410c',bg:'#ffedd5',icon:'🚚',step:4},
+  'BOL Received':     {color:'#065f46',bg:'#d1fae5',icon:'📄',step:5},
+  'Out for Delivery': {color:'#9d174d',bg:'#fce7f3',icon:'📦',step:6},
+  'Delivered':        {color:'#14532d',bg:'#dcfce7',icon:'✅',step:7}
+};
+const TL_STEPS = ['Order Placed','Advance Paid','Processing','Shipped','BOL Received','Delivered'];
+const fmt = n => '$' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0});
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const slug = window.location.pathname.split('/').pop();
+let projectData = null;
+
+async function load() {
+  try {
+    const res = await fetch(`/api/portal/${slug}`);
+    if (!res.ok) { document.getElementById('loading').innerHTML = '❌ Project not found or link expired. Please contact <a href="mailto:info@horecastore.com">info@horecastore.com</a>'; return; }
+    projectData = await res.json();
+    render();
+  } catch(e) {
+    document.getElementById('loading').innerHTML = '❌ Could not load project. Please try again.';
+  }
+}
+
+function render() {
+  const p = projectData;
+  const sell = p.sell_total || p.items.reduce((s,i)=>s+parseFloat(i.sell_each)*i.qty,0);
+  const balance = sell - parseFloat(p.paid_by_client||0);
+  const del = p.items.filter(i=>i.status==='Delivered').length;
+  const pct = p.items.length ? Math.round((del/p.items.length)*100) : 0;
+  const firstName = (p.contact_name||'').split(' ')[0] || 'there';
+  document.title = `Project360 – ${p.client} | Horeca Store`;
+
+  const itemsHtml = p.items.map(it => {
+    const st = SC[it.status]||SC['Pending Order'];
+    const cs = SC[it.status]?.step??0;
+    const tl = TL_STEPS.map((s,i) => {
+      const ss = SC[s]?.step??0; const done = ss<=cs; const cur = s===it.status;
+      const c = SC[s]?.color||'#94a3b8';
+      return `<div class="tl-dot" title="${s}" style="background:${done?c:'#e2e8f0'};${cur?`box-shadow:0 0 0 2px ${c}`:''};${cur?`transform:scale(1.3)`:''};transition:all .2s"></div>${i<TL_STEPS.length-1?`<div class="tl-line" style="background:${done?'#cbd5e1':'#e2e8f0'}"></div>`:''}`;
+    }).join('');
+    return `<div class="item-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:48px;height:48px;background:#f1f5f9;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${esc(it.img_emoji||'📦')}</div>
+          <div>
+            <div style="font-weight:700;font-size:14px;color:#0f172a">${esc(it.name)}</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:2px">${esc(it.brand||'')} · Qty: ${it.qty}</div>
+            ${it.bol?`<div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">
+              <span class="pill" style="color:#065f46;background:#d1fae5">📄 ${esc(it.bol)}</span>
+              ${it.tracking?`<span class="pill" style="color:#475569;background:#f1f5f9">🔍 ${esc(it.tracking)}</span>`:''}
+            </div>`:''}
+            ${it.status==='Delivered'?`<div style="margin-top:7px;font-size:12px;color:#2d6a2d;font-weight:600">✅ Delivered ${it.delivered_date||''} · Received by <strong>${esc(it.received_by||'—')}</strong></div>`:''}
+            ${it.status!=='Delivered'&&it.eta?`<div style="margin-top:7px;font-size:12px;color:#d4860a;font-weight:600">📅 Expected: <strong>${it.eta}</strong></div>`:''}
+            ${it.location&&it.status!=='Delivered'?`<div style="margin-top:4px;font-size:11px;color:#64748b">📍 ${esc(it.location)}</div>`:''}
+          </div>
+        </div>
+        <span class="pill" style="color:${st.color};background:${st.bg};flex-shrink:0;font-size:12px;padding:5px 12px">${st.icon} ${it.status}</span>
+      </div>
+      <div class="tl">${tl}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+  document.getElementById('content').innerHTML = `
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:28px;font-weight:800;color:#0f172a;margin-bottom:8px">Hi, ${esc(firstName)} 👋</div>
+      <div style="font-size:14px;color:#64748b">Here is your live project status from <strong>Horeca Store</strong></div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:4px">${esc(p.client)} · ${esc(p.cuisine_type||'')} ${esc(p.project_type||'')}</div>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:30px;padding:6px 14px;margin-top:14px">
+        <div style="background:#111827;border-radius:6px;padding:2px 7px;text-align:center;line-height:1.2">
+          <div style="font-size:7px;font-weight:800;letter-spacing:.1em;color:#6b7280">PROJECT</div>
+          <div style="font-size:12px;font-weight:900;color:#C41E3A;margin-top:-1px">360</div>
+        </div>
+        <span style="font-size:11px;color:#475569;font-weight:600">Live tracking · Supplier status · Delivery timelines · Financial transparency</span>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px 22px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div>
+          <div style="font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:.07em;margin-bottom:4px">PROJECT COMPLETION</div>
+          <div style="font-size:28px;font-weight:800;color:${pct===100?'#2d6a2d':'#2563eb'}">${pct}%</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px">${del} of ${p.items.length} items delivered</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:.07em;margin-bottom:4px">EST. COMPLETION</div>
+          <div style="font-size:16px;font-weight:700;color:#d4860a">${p.est_delivery||'TBD'}</div>
+        </div>
+      </div>
+      <div style="height:10px;border-radius:5px;background:#e2e8f0;overflow:hidden">
+        <div style="height:100%;border-radius:5px;width:${pct}%;background:${pct===100?'#2d6a2d':'#C41E3A'};transition:width 1s ease"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+        ${Object.entries({'Delivered':['✅','#dcfce7','#14532d'],'In Transit':['🚚','#ffedd5','#c2410c'],'Processing':['⚙️','#dbeafe','#1e40af'],'Pending':['⏳','#fef3c7','#92400e']}).map(([k,[icon,bg,color]])=>{
+          const count = k==='Delivered'?del:k==='In Transit'?p.items.filter(i=>['Shipped','BOL Received','Out for Delivery'].includes(i.status)).length:k==='Processing'?p.items.filter(i=>['Processing','Advance Paid','Order Placed'].includes(i.status)).length:p.items.filter(i=>i.status==='Pending Order').length;
+          return `<span class="pill" style="color:${color};background:${bg}">${icon} ${count} ${k}</span>`;
+        }).join('')}
+      </div>
+    </div>
+
+    ${balance>0?`
+    <div style="background:linear-gradient(135deg,#fff1f2,#fef3c7);border:1px solid #fca5a5;border-radius:14px;padding:18px 22px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px">
+      <div>
+        <div style="font-size:11px;color:#64748b;font-weight:700;letter-spacing:.07em;margin-bottom:4px">💳 BALANCE REMAINING</div>
+        <div style="font-size:26px;font-weight:800;color:#0f172a">${fmt(balance)}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:3px">${fmt(p.paid_by_client)} paid · Total contract ${fmt(sell)}</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:8px">To make a payment, contact us:</div>
+        <div style="font-weight:700;color:#C41E3A;font-size:13px">📧 info@horecastore.com</div>
+        <div style="font-weight:700;color:#C41E3A;font-size:13px;margin-top:3px">📞 +1 (800) HORECA-1</div>
+      </div>
+    </div>`:`
+    <div style="background:#dcfce7;border:1px solid #86efac;border-radius:13px;padding:14px 18px;margin-bottom:16px;color:#14532d;font-weight:700;font-size:14px">
+      ✅ Fully Paid – Thank you for your business!
+    </div>`}
+
+    <div style="font-weight:700;font-size:14px;color:#0f172a;margin-bottom:12px">📦 Your Items (${p.items.length})</div>
+    ${itemsHtml}
+
+    <div id="upsellArea" style="margin-top:20px">
+      <div style="background:#f5f3ff;border:1px solid #e9d5ff;border-radius:13px;padding:18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span class="ai-badge">AI</span>
+          <span style="font-size:13px;font-weight:700;color:#7c3aed">Personalized recommendations for your ${esc(p.cuisine_type||'kitchen')} setup</span>
+        </div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:12px">Based on your project, our AI found items you might still need.</div>
+        <button onclick="loadUpsell()" style="background:#7c3aed;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">✨ See Smart Recommendations</button>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:32px;padding:20px 16px;border-top:1px solid #e2e8f0">
+      <div style="font-size:11px;color:#64748b;margin-bottom:4px">Powered by</div>
+      <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px">
+        <img src="/logo.jpg" style="height:28px;object-fit:contain" onerror="this.style.display='none'"/>
+        <div style="background:#111827;border-radius:6px;padding:2px 8px;text-align:center;line-height:1.15">
+          <div style="font-size:7px;font-weight:800;letter-spacing:.1em;color:#6b7280">PROJECT</div>
+          <div style="font-size:13px;font-weight:900;color:#C41E3A;margin-top:-1px">360</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#94a3b8">Questions? <strong style="color:#2563eb">info@horecastore.com</strong> · <strong style="color:#2563eb">+1 (800) HORECA-1</strong></div>
+      <div style="font-size:10px;color:#cbd5e1;margin-top:6px">© Horeca Store USA & UAE · Last updated: ${new Date().toLocaleDateString()}</div>
+    </div>`;
+}
+
+async function loadUpsell() {
+  const p = projectData;
+  const area = document.getElementById('upsellArea');
+  area.innerHTML = `<div style="background:#f5f3ff;border:1px solid #e9d5ff;border-radius:13px;padding:18px;text-align:center;color:#7c3aed;font-weight:700">✨ AI is analyzing your ${esc(p.cuisine_type||'kitchen')} setup...</div>`;
+  const existing = p.items.map(i=>i.name).join(', ');
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:700,
+        messages:[{role:'user',content:`You are a commercial kitchen equipment expert for Horeca Store USA. Client: ${p.client}. Cuisine: ${p.cuisine_type||'Restaurant'}. Project: ${p.project_type||'Build-Out'}. Items already ordered: ${existing}. Suggest exactly 4 additional essential items they likely need that are NOT already ordered. Respond ONLY with a valid JSON array, no markdown, no extra text: [{"name":"item name","reason":"one sentence why they need it for this cuisine","price":"typical price range","emoji":"one emoji"}]`}]
+      })
+    });
+    const data = await res.json();
+    const items = JSON.parse(data.content[0].text);
+    area.innerHTML = `<div style="background:#f5f3ff;border:1px solid #e9d5ff;border-radius:13px;padding:18px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span class="ai-badge">AI</span>
+        <span style="font-size:13px;font-weight:700;color:#7c3aed">You might also need these for your ${esc(p.cuisine_type||'kitchen')}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${items.map(i=>`<div class="upsell-card">
+          <div style="font-size:26px;margin-bottom:8px">${i.emoji}</div>
+          <div style="font-weight:700;font-size:13px;color:#0f172a;margin-bottom:5px">${esc(i.name)}</div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:8px;line-height:1.5">${esc(i.reason)}</div>
+          <div style="font-size:12px;color:#d4860a;font-weight:700;margin-bottom:10px">${esc(i.price)}</div>
+          <button onclick="requestQuote('${esc(i.name.replace(/'/g,""))}','${esc(p.client)}')" style="background:#C41E3A;color:#fff;border:none;width:100%;padding:8px;border-radius:7px;font-weight:700;cursor:pointer;font-size:12px">Request Quote</button>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  } catch(e) {
+    area.innerHTML = `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:13px;padding:16px;color:#dc2626;font-size:12px">Could not load recommendations. Please contact us at info@horecastore.com</div>`;
+  }
+}
+
+function requestQuote(item, client) {
+  window.location.href = `mailto:info@horecastore.com?subject=Quote Request – ${encodeURIComponent(item)}&body=Hi Horeca Store Team,%0A%0AI am ${encodeURIComponent(client)} and I would like to get a quote for:%0A%0AItem: ${encodeURIComponent(item)}%0A%0APlease get back to me at your earliest convenience.%0A%0AThank you`;
+}
+
+load();
+</script>
+</body>
+</html>

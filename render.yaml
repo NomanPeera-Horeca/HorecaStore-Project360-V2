@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: horeca-track
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: TEAM_PASSWORD
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: horeca-track-db
+          property: connectionString
+
+databases:
+  - name: horeca-track-db
+    plan: free
+    databaseName: horecastore
+    user: horecastore
